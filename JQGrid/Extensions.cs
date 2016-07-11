@@ -17,7 +17,6 @@ namespace Common.UI.JQGrid
         /// <returns></returns>
         public static object getPropertyInfoValue(this PropertyInfo v1,string obj)
         {
-
             try
             {
                 if (v1.PropertyType == typeof(String))

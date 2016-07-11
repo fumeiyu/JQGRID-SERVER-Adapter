@@ -18,3 +18,4 @@ C:\newcompany\类库\Common.UI\Common.UI\Common.UI\bin\Debug\NPOI.OpenXml4Net.dl
 C:\newcompany\类库\Common.UI\Common.UI\Common.UI\bin\Debug\Newtonsoft.Json.xml
 C:\newcompany\类库\Common.UI\Common.UI\Common.UI\obj\Debug\Common.UI.dll
 C:\newcompany\类库\Common.UI\Common.UI\Common.UI\obj\Debug\Common.UI.pdb
+C:\newcompany\类库\Common.UI\Common.UI\Common.UI\obj\Debug\Common.UI.csprojResolveAssemblyReference.cache
