@@ -1,97 +1,61 @@
-﻿using System;
+﻿using Castle.ActiveRecord;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
-
+using Common.UI.JQGrid;
 namespace Common.UI.JQGrid
 {
-   public class JGOperItem<T> where T : new()
+    /// <summary>
+    /// v2.0版本加入了FiledList ，用来筛选属性值是否要赋值 afterrequestdataconvert, SaveT 保存后的对象
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public class JGOperItem<T> where T : new() 
     {
         public string oper = "";
         private T t;
         private HttpRequest request;
         public object ID;
-
+        public List<String> FiledLists;// 使用filed
         public Action<T> beforeAdd, beforeDel, beforemodify;
+        public Action<T, JGOperItem<T>> afterrequestdataconvert;//数据转换玩后执行，用来重新设置ID
 
-       
-        public JGOperItem( HttpRequest request, Action<T> beforeAdd,Action<T> beforemodify,Action<T> beforeDel)
+        /// <summary>
+        /// 保存后save对象
+        /// </summary>
+        public T SaveT
         {
-            T t = new T();
-            this.t = t;
-            this.beforeAdd = beforeAdd;
-            this.request = request;
-            this.beforemodify = beforemodify;
-            this.beforeDel = beforeDel;
-
-
+            get
+            {
+                return t;
+            }
         }
+        public JGOperItem(HttpRequest request, Action<T> beforeAdd, Action<T> beforemodify, Action<T> beforeDel)
+     : this(request, beforeAdd, beforemodify, beforeDel, null,null) { }
         public JGOperItem(HttpRequest request):this(request,null,null,null)
         {
 
         }
+
+        public JGOperItem(HttpRequest request, Action<T> beforeAdd, Action<T> beforemodify, Action<T> beforeDel, Action<T, JGOperItem<T>> afterrequestdataconvert, List<String> filedList)
+        {
+
+            this.beforeAdd = beforeAdd;
+            this.request = request;
+            this.beforemodify = beforemodify;
+            this.beforeDel = beforeDel;
+            this.afterrequestdataconvert = afterrequestdataconvert;
+            FiledLists = filedList;
+        }
+
+
         void ConvertFromData()  {
 
-            var form = request.Form;
-            var v=t.GetType().GetProperties();
-
-            //反过来写
-            //foreach (var key in form.Keys)
-            //{
-            //    string k = key.ToString();
-            //    if ( key.ToString() == oper)
-            //        continue;
-            //    if (key.ToString() == "id")
-            //    {
-            //        if (form[k] == "_empty")
-            //            continue;
-            //        k = "ID";
-            //        ID = int.Parse(form[k]);
-            //    }
-            //    var OBJ1 = form[k];
-
-            //    var t1 = t.GetType().GetProperty(k);
-
-
-            //    if (t1 != null)
-            //    {
-            //        var newobj = t1.getPropertyInfoValue(OBJ1);
-            //        t1.SetValue(t, newobj);
-            //    }
-
-            //    //查找
-
-            //}
-
-            foreach (var v1 in v)
-            {
-                if (form[v1.Name] != null)
-                {
-
-                    //过滤默认的小写id；
-
-                    if (v1.Name.ToUpper() == nameof(ID)) {
-                        if (form["oper"] == "add") {
-                            continue;
-                        }
-                    }
-                    var OBJ1 = form[v1.Name];
-                    var newobj = v1.getPropertyInfoValue(OBJ1);
-                    if (newobj != null)
-                    {
-                        v1.SetValue(t, newobj);
-                    }
-                    if (v1.Name.ToUpper() == nameof(ID))
-                    {
-                        ID = newobj;
-                    }
-
-                }
-
-            }
-            oper = form["oper"];
+            T t = new T();
+            this.t = this.request.HttpRequestConvertToT<T>(FiledLists, out ID);
+            oper = request.Form["oper"];
             //return t;
         }
 
@@ -146,6 +110,9 @@ namespace Common.UI.JQGrid
             var v = t.GetType().GetProperties();
             foreach (var v1 in v)
             {
+                if (FiledFiter(v1.Name)) {
+                    continue;
+                }
                 if (request.Form[v1.Name] != null)
                 {
                     var obj = v1.getPropertyInfoValue(request.Form[v1.Name]);
@@ -153,9 +120,18 @@ namespace Common.UI.JQGrid
                 }
             }
         }
-   
+
+        private bool FiledFiter(string name) {
+            if (FiledLists == null)
+                return false;
+            return FiledLists.Find(a => a == name) == null ? true : false;
+        }
         public bool  DoDataAction() {
-            ConvertFromData();    
+
+            ConvertFromData();
+            if (afterrequestdataconvert != null) {
+                afterrequestdataconvert(t,this);
+            }
             switch (oper) {
                 case "add":
                     if (beforeAdd != null) {
@@ -189,7 +165,11 @@ namespace Common.UI.JQGrid
            var f = n.GetType().GetMethod("Update");
             //重新复制
             SetTValue(n);
+            if (beforemodify!=null) {
+                beforemodify(n);
+            }
             f.Invoke(n, new object[0]);
+            t = n;
             return true;
 
         }

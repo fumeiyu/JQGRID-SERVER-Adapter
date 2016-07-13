@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using NHibernate.Criterion;
 using System.Web;
+using System.Reflection;
 
 namespace Common.UI.JQGrid
 {
@@ -16,7 +17,7 @@ namespace Common.UI.JQGrid
         public string sidx;
         public string sord;
         public bool isSearch;
-        JqGridFitler fiter;
+         JqGridFitler fiter; //可以用来修改password
         ICriterion defaultfiter;
 
         public int FirstResult
@@ -28,26 +29,31 @@ namespace Common.UI.JQGrid
         {
             get { return (pageindex - 1) * rows + rows; }
         }
-        public JqGridSearch(HttpRequest request):this(request, null)
+        public JqGridSearch(HttpRequest request) : this(request, null)
         {
 
-        
+
             //if (request.QueryString["searchingtext"] != null)
             //{
             //    searchingtext = request.QueryString["searchingtext"].ToString();
             //}
         }
 
-        public JqGridSearch(HttpRequest request,ICriterion defaultfiter)
+        public JqGridSearch(HttpRequest request, ICriterion defaultfiter)
         {
-            rows = int.Parse(request.QueryString["rows"]);
-            pageindex = int.Parse(request.QueryString["page"]);
-            sord = request.QueryString["sord"].ToString();
-            sidx = request.QueryString["sidx"].ToString();
-            isSearch = bool.Parse(request.QueryString["_search"].ToString());
+            //rows = request.QueryString["rows"].ToInt();
+            //pageindex = int.Parse(request.QueryString["page"]);
+            //sord = request.QueryString["sord"].ToString();
+            //sidx = request.QueryString["sidx"].ToString();
+            rows = request.QueryString["rows"].ToInt();
+            pageindex = request.QueryString["page"].ToInt();
+            sord = request.QueryString["sord"].ToStringNoNull("");
+            sidx = request.QueryString["sidx"].ToStringNoNull();
+
+            isSearch = request.QueryString["_search"].ToBool();
             if (isSearch)
             {
-                string fiters = request.QueryString["filters"].ToString();
+                string fiters = request.QueryString["filters"].ToStringNoNull();
                 if (fiters != "")
                 {
                     Fiter = Newtonsoft.Json.JsonConvert.DeserializeObject<JqGridFitler>(fiters);
@@ -62,7 +68,8 @@ namespace Common.UI.JQGrid
         }
 
 
-        public Order[] getorder() {
+        public Order[] getorder()
+        {
 
             Order[] o;
             if (sidx != "")
@@ -76,22 +83,26 @@ namespace Common.UI.JQGrid
                 return null;
         }
 
-        public JqGridSearch() {
-        }
-        private List<T> _Search(out long recordcount)
+        public JqGridSearch()
         {
-
+        }
+        private List<T> _Search(out long recordcount, bool needCount)
+        {
+            recordcount = 0;
             T t = new T();
-            List<T> list = new List<T>() ;
+            List<T> list = new List<T>();
             var o = getorder();
             var ic = getCriterion(Fiter);
-          //  var p = t.GetType().GetMethod("RecordCount");
+            //  var p = t.GetType().GetMethod("RecordCount");
 
-             List<ICriterion> lists = new List<ICriterion>();
+            List<ICriterion> lists = new List<ICriterion>();
             if (defaultfiter != null)
                 lists.Add(defaultfiter);
-             var p = t.GetType().GetMethod("RecordCount",System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public, null, new Type[1] {lists.ToArray().GetType() },null);
-
+            MethodInfo p = null;
+            if (needCount)
+            {
+                p = t.GetType().GetMethod("RecordCount", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public, null, new Type[1] { lists.ToArray().GetType() }, null);
+            }
             if (ic == null)
             {
 
@@ -120,21 +131,25 @@ namespace Common.UI.JQGrid
 
                 var t1 = t.GetType().BaseType.GetMethod("SlicedFindAll", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public, null, new Type[3] { typeof(int), typeof(int), lists.ToArray().GetType() }, null);
 
-               list.AddRange((T[])t1.Invoke(null, new object[3] { FirstResult, MaxResults, lists.ToArray() }));
+                list.AddRange((T[])t1.Invoke(null, new object[3] { FirstResult, MaxResults, lists.ToArray() }));
 
-                 
-              //  list = (List<T>)t1.Invoke(null, new object[3] { FirstResult, MaxResults, lists.ToArray() });
 
-                recordcount = (long)p.Invoke(null, new object[1] { lists.ToArray() });
+                //  list = (List<T>)t1.Invoke(null, new object[3] { FirstResult, MaxResults, lists.ToArray() });
 
+                if (needCount)
+                {
+                    recordcount = (long)p.Invoke(null, new object[1] { lists.ToArray() });
+                }
 
             }
             else
             {
                 var t1 = t.GetType().BaseType.GetMethod("SlicedFindAll", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public, null, new Type[4] { typeof(int), typeof(int), o.GetType(), lists.ToArray().GetType() }, null);
                 list.AddRange((T[])t1.Invoke(null, new object[4] { FirstResult, MaxResults, o, lists.ToArray() }));
-                recordcount = (long)p.Invoke(null, new object[1] { lists.ToArray() });
-
+                if (needCount)
+                {
+                    recordcount = (long)p.Invoke(null, new object[1] { lists.ToArray() });
+                }
             }
 
 
@@ -150,15 +165,23 @@ namespace Common.UI.JQGrid
 
 
         }
-        public jQGrid<T> Search() {
-         
-            //查找内容 
 
+
+
+
+        public jQGrid<T> Search(bool needCount)
+        {
             T t = new T();
             long totalrecord;
-            var l=_Search(out totalrecord);
-            jQGrid<T> jg = new jQGrid<T>(rows,pageindex,(int)totalrecord,l);
+            var l = _Search(out totalrecord, needCount);
+            jQGrid<T> jg = new jQGrid<T>(rows, pageindex, (int)totalrecord, l);
             return jg;
+        }
+        public jQGrid<T> Search()
+        {
+
+            //查找内容 
+            return Search(true);
 
         }
         //private int getTotalRecord<T>() {
@@ -189,7 +212,8 @@ namespace Common.UI.JQGrid
         }
 
 
-        public ICriterion ToCriterion() {
+        public ICriterion ToCriterion()
+        {
             return getCriterion(fiter);
 
         }
@@ -211,8 +235,9 @@ namespace Common.UI.JQGrid
                 foreach (var v in fiter.groups)
                 {
                     var vs = getCriterion(v);
-                    if (vs != null) { 
-                    list.Add(getCriterion(v));
+                    if (vs != null)
+                    {
+                        list.Add(getCriterion(v));
                     }
 
                 }
@@ -243,10 +268,11 @@ namespace Common.UI.JQGrid
         }
         public String ToSql()
         {
-          return   getSql(fiter);
+            return getSql(fiter);
 
         }
-        string getSql(JqGridFitler fiter) {
+        string getSql(JqGridFitler fiter)
+        {
 
             string s = "";
             foreach (var rules in fiter.rules)
@@ -255,11 +281,12 @@ namespace Common.UI.JQGrid
                 s += string.Format("{0} {1} {2} {3} ", rules.field, rules.op, rules.data, fiter.groupOp);
             }
 
-            if (fiter.groups.Count > 0) {
+            if (fiter.groups.Count > 0)
+            {
 
                 s += " ( ";
             }
-            foreach(var v in fiter.groups)
+            foreach (var v in fiter.groups)
             {
                 s += getSql(v);
 
@@ -269,11 +296,12 @@ namespace Common.UI.JQGrid
                 s += " ) ";
             }
 
-            if (fiter.groups.Count == 0) {
-                s=s.Remove(s.Length - fiter.groupOp.Length-1);
+            if (fiter.groups.Count == 0)
+            {
+                s = s.Remove(s.Length - fiter.groupOp.Length - 1);
             }
 
-                return s;
+            return s;
         }
     }
 }
