@@ -10,6 +10,8 @@ namespace Common.UI.JQGrid
 {
     /// <summary>
     /// v2.0版本加入了FiledList ，用来筛选属性值是否要赋值 afterrequestdataconvert, SaveT 保存后的对象
+    /// 修改主键自动匹配from["id"]，用来处理jggrid
+    /// 
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public class JGOperItem<T> where T : new() 
@@ -18,7 +20,12 @@ namespace Common.UI.JQGrid
         private T t;
         private HttpRequest request;
         public object ID;
-        public List<String> FiledLists;// 使用filed
+        public List<String> FiledLists;// 使用filed  过滤列表或者只选择转换列表
+        bool fiterType;
+       // public List<String> FiterFiledLists;//过滤的filed列表
+
+    
+
         public Action<T> beforeAdd, beforeDel, beforemodify;
         public Action<T, JGOperItem<T>> afterrequestdataconvert;//数据转换玩后执行，用来重新设置ID
 
@@ -40,6 +47,22 @@ namespace Common.UI.JQGrid
         }
 
         public JGOperItem(HttpRequest request, Action<T> beforeAdd, Action<T> beforemodify, Action<T> beforeDel, Action<T, JGOperItem<T>> afterrequestdataconvert, List<String> filedList)
+            :this(request,beforeAdd,beforemodify,beforeDel,afterrequestdataconvert,filedList,false)
+        {
+
+   
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="beforeAdd"></param>
+        /// <param name="beforemodify"></param>
+        /// <param name="beforeDel"></param>
+        /// <param name="afterrequestdataconvert"></param>
+        /// <param name="filedList"></param>
+        /// <param name="fiterType">true 过滤列表 ，false，只选择列表</param>
+        public JGOperItem(HttpRequest request, Action<T> beforeAdd, Action<T> beforemodify, Action<T> beforeDel, Action<T, JGOperItem<T>> afterrequestdataconvert, List<String> filedList,bool fiterType)
         {
 
             this.beforeAdd = beforeAdd;
@@ -47,14 +70,17 @@ namespace Common.UI.JQGrid
             this.beforemodify = beforemodify;
             this.beforeDel = beforeDel;
             this.afterrequestdataconvert = afterrequestdataconvert;
-            FiledLists = filedList;
-        }
+            this.fiterType = fiterType;
+         
+                FiledLists = filedList;
+        
 
+        }
 
         void ConvertFromData()  {
 
             T t = new T();
-            this.t = this.request.HttpRequestConvertToT<T>(FiledLists, out ID);
+            this.t = this.request.HttpRequestConvertToT<T>(FiledLists,fiterType, out ID);
             oper = request.Form["oper"];
             //return t;
         }
@@ -123,7 +149,13 @@ namespace Common.UI.JQGrid
 
         private bool FiledFiter(string name) {
             if (FiledLists == null)
+            {
                 return false;
+            }
+            else  if (fiterType){
+                return FiledLists.Find(a => a == name) == null ? false : true;
+            }
+            else 
             return FiledLists.Find(a => a == name) == null ? true : false;
         }
         public bool  DoDataAction() {

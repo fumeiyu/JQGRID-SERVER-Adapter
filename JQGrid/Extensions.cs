@@ -181,19 +181,19 @@ namespace Common.UI.JQGrid
 
             foreach (var v1 in v)
             {
-                if (form[v1.Name] != null)
+                if (form[v1.Name] != null || (v1.isPrimaryKeyAttribute()))
                 {
 
                     //过滤默认的小写id；
 
-                    if (v1.Name.ToUpper() == nameof(ID))
+                    if (v1.Name.ToUpper() == nameof(ID) || v1.isPrimaryKeyAttribute())
                     {
                         if (form["oper"] == "add")
                         {
                             continue;
                         }
                     }
-                    var OBJ1 = form[v1.Name];
+                    var OBJ1 = form[v1.Name] == null ? form["id"] : form[v1.Name];
                     var newobj = v1.getPropertyInfoValue(OBJ1);
                     if (newobj != null)
                     {
@@ -204,32 +204,36 @@ namespace Common.UI.JQGrid
                         ID = newobj;
                         continue;
                     }
-                    try
-                    {
-                        var attribute = v1.GetCustomAttributes(true);
-                        if (attribute != null && attribute.Length > 0)
-                        {
-
-                            foreach (var tt in attribute)
-                            {
-
-                                if (tt is PrimaryKeyAttribute)
-                                {
-                                    //获取值
-                                    ID = newobj;
-                                }
-                            }
-                        }
+                    if (v1.isPrimaryKeyAttribute()) {
+                        ID = newobj;
                     }
-                    catch { }
-
                 }
 
             }
             return t;
         }
+        public  static  bool isPrimaryKeyAttribute(this PropertyInfo v1) {
+            try
+            {
+                var attribute = v1.GetCustomAttributes(true);
+                if (attribute != null && attribute.Length > 0)
+                {
 
-        public static T HttpRequestConvertToT<T>(this HttpRequest request, List<String> filedList, out object ID) where T : new()
+                    foreach (var tt in attribute)
+                    {
+
+                        if (tt is PrimaryKeyAttribute)
+                        {
+                            //获取值
+                            return true;
+                        }
+                    }
+                }
+            }
+            catch { }
+            return false;
+        }
+        public static T HttpRequestConvertToT<T>(this HttpRequest request, List<String> filedList,bool fiterType, out object ID) where T : new()
         {
             if (filedList == null)
             {
@@ -242,53 +246,58 @@ namespace Common.UI.JQGrid
             var v = t.GetType().GetProperties();
             foreach (var v1 in v)
             {
-                if (form[v1.Name] != null)
+
+               //如果是主键转换成ID;
+
+                if (form[v1.Name] != null ||(v1.isPrimaryKeyAttribute()))
                 {
 
                     //过滤默认的小写id；
 
-                    if (v1.Name.ToUpper() == nameof(ID))
+                    if (v1.Name.ToUpper() == nameof(ID) || v1.isPrimaryKeyAttribute())
                     {
                         if (form["oper"] == "add")
                         {
                             continue;
                         }
                     }
-                    
-                    var OBJ1 = form[v1.Name];
-                    var newobj = v1.getPropertyInfoValue(OBJ1);
-                    if (newobj != null)
+
+                    var OBJ1 = form[v1.Name] == null ? form["id"] : form[v1.Name];
+                    if (fiterType)
+                    {
+                        if (filedList.Find(a => a == v1.Name) != null)
+                        {
+                            continue;
+                        }
+                    }
+                    else
                     {
                         ///设置值判断是否需要设置
                         ///
-                        if (filedList.Find(a => a == v1.Name)!=null)
+                        if (filedList.Find(a => a == v1.Name) == null)
                         {
-                            v1.SetValue(t, newobj);
+                            continue;
                         }
+                    }
+                    var newobj = v1.getPropertyInfoValue(OBJ1);
+
+                    if (newobj != null)
+                    {
+                        v1.SetValue(t, newobj);
+
+                        ///如果true，过滤string 数组
+
+
                     }
                     if (v1.Name.ToUpper() == nameof(ID)) //判断主键 
                     {
                         ID = newobj;
                         continue;
                     }
-                    try
+                    if (v1.isPrimaryKeyAttribute())
                     {
-                        var attribute = v1.GetCustomAttributes(true);
-                        if (attribute != null && attribute.Length > 0)
-                        {
-
-                            foreach (var tt in attribute)
-                            {
-
-                                if (tt is PrimaryKeyAttribute)
-                                {
-                                    //获取值
-                                    ID = newobj;
-                                }
-                            }
-                        }
+                        ID = newobj;
                     }
-                    catch { }
 
                 }
 
