@@ -9,9 +9,9 @@ using Common.UI.JQGrid;
 namespace Common.UI.JQGrid
 {
     /// <summary>
-    /// v2.0版本加入了FiledList ，用来筛选属性值是否要赋值 afterrequestdataconvert, SaveT 保存后的对象
-    /// 修改主键自动匹配from["id"]，用来处理jggrid
-    /// 
+    ///// v2.0版本加入了FiledList ，用来筛选属性值是否要赋值 afterrequestdataconvert[ 用于对jgoperitem操作], SaveT 保存后的对象
+    /// 修改主键自动匹配from["id"]，用来处理jggrid 修改delete必须要ID的问题
+    /// v.2.2版本加入了批量删除，传入 ID 列表
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public class JGOperItem<T> where T : new() 
@@ -22,8 +22,8 @@ namespace Common.UI.JQGrid
         public object ID;
         public List<String> FiledLists;// 使用filed  过滤列表或者只选择转换列表
         bool fiterType;
-       // public List<String> FiterFiledLists;//过滤的filed列表
-
+        // public List<String> FiterFiledLists;//过滤的filed列表
+        public bool allowmutidelete=false; //批量删除 
     
 
         public Action<T> beforeAdd, beforeDel, beforemodify;
@@ -100,7 +100,6 @@ namespace Common.UI.JQGrid
         //        else if (v1.PropertyType == typeof(bool))
         //        {
         //            return Boolean.Parse(obj.ToString());
-
 
         //        }
 
@@ -206,15 +205,63 @@ namespace Common.UI.JQGrid
 
         }
         bool Delete() {
+            T n;
 
-            var n = Find();
-            if (beforeDel != null) {
-                beforeDel(n);
+            if (ID != null && ID.ToString().IndexOf(",") > -1) //批量删除
+            {
+                if (!this.allowmutidelete)
+                    throw new Exception("批量删除数据不允许");
+                    //批量删除的时候
+                    
+
+                String[] deletelist = ID.ToString().Split(',');
+                T n1 = new T();
+                var v = n1.GetType().GetProperties();
+                foreach (var str in deletelist)
+                {
+                    foreach (var y in v)
+                    {
+                        if (y.isPrimaryKeyAttribute())
+                        {
+                            //
+                            ID = y.getPropertyInfoValue(str);
+                            n = Find();
+                            if (beforeDel != null)
+                            {
+                                beforeDel(n);
+                            }
+                            var f = n.GetType().GetMethod("Delete");
+                            f.Invoke(n, new object[0]);
+                            //删除动作
+                            continue;
+                        }
+                    }
+                }
+                return true;
+
+
             }
-            var f = n.GetType().GetMethod("Delete");
-            f.Invoke(n, new object[0]);
+            else
+            {
+                if (ID == null || ID.ToString() == "0")
+                {
+                    n = new T();
+                    SetTValue(n);
+                }
+                else
+                {
 
-            return true;
+                    n = Find();
+                }
+                if (beforeDel != null)
+                {
+                    beforeDel(n);
+                }
+                var f = n.GetType().GetMethod("Delete");
+                f.Invoke(n, new object[0]);
+
+                return true;
+            }
         }
         T Find() {
             var t1 = t.GetType().BaseType.GetMethod("Find");

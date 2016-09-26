@@ -9,15 +9,21 @@ using System.Reflection;
 
 namespace Common.UI.JQGrid
 {
+    /// <summary>
+    /// V2.1 版本加入输出内容控制,FiledLists字段列 增加 sord，多排序，使用，分隔多个order，修正MaxResults bug ,值为每页大小，而不是最大值
+    /// 
+    /// V2.3版本 加入了通过非 httprequest 获取数据 ，加入新的构造函数
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     public class JqGridSearch<T> where T : class, new()
     {
-
-
+        public List<String> FiledLists;// 使用filed  过滤列表或者只选择转换列表
+        bool fiterType;
         public int rows, pageindex;
         public string sidx;
         public string sord;
         public bool isSearch;
-         JqGridFitler fiter; //可以用来修改password
+        JqGridFitler fiter; //可以用来修改password
         ICriterion defaultfiter;
 
         public int FirstResult
@@ -27,7 +33,7 @@ namespace Common.UI.JQGrid
 
         public int MaxResults
         {
-            get { return (pageindex - 1) * rows + rows; }
+            get { return   rows; }
         }
         public JqGridSearch(HttpRequest request) : this(request, null)
         {
@@ -38,6 +44,24 @@ namespace Common.UI.JQGrid
             //    searchingtext = request.QueryString["searchingtext"].ToString();
             //}
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="rows"></param>
+        /// <param name="pageindex"></param>
+        /// <param name="sord">排序</param>
+        /// <param name="sidx">排序字段</param>
+        /// <param name="defaultfiter">默认的条件</param>
+        public JqGridSearch(int rows, int pageindex, string sord, string sidx, ICriterion defaultfiter) {
+
+            this.rows = rows;
+            this.pageindex = pageindex;
+            this.sord = sord;
+            this.sidx = sidx;
+            this.defaultfiter = defaultfiter;
+        }
+
 
         public JqGridSearch(HttpRequest request, ICriterion defaultfiter)
         {
@@ -74,9 +98,24 @@ namespace Common.UI.JQGrid
             Order[] o;
             if (sidx != "")
             {
-                o = new Order[1];
-                o[0] = new Order(sidx, sord == "asc" ? true
-                        : false);
+                string[] tt = sidx.Split(',');
+                o = new Order[tt.Length];
+                string[] sords = sord.Split(',');
+                for (int i = 0; i < tt.Length; i++) {
+                    bool asc ;
+                    if (sords.Length >= i)
+                    {
+                        asc = sords[0] == "asc" ? true : false;
+                    }
+                    else {
+                        asc = sords[i] == "asc" ? true : false;
+
+                    }
+                    o[i] = new Order(tt[i], asc);
+                }
+                //o = new Order[1];
+                //o[0] = new Order(sidx, sord == "asc" ? true
+                //        : false);
                 return o;
             }
             else

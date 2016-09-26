@@ -81,7 +81,7 @@ namespace Common.UI.JQGrid
             }
             catch (Exception ex)
             {
-                throw new Exception("数据格式不正确");
+                throw new Exception("数据格式不正确" +v1.Name+": " + obj);
             }
             return null;
 
@@ -192,6 +192,18 @@ namespace Common.UI.JQGrid
                         {
                             continue;
                         }
+                        if (form["oper"] == "del")
+                        {
+
+                            var tkeyidlist = form[v1.Name] == null ? form["id"] : form[v1.Name];
+
+                            if (tkeyidlist.IndexOf(",") > -1) // 多个删除的ID;
+                            {
+                                ID = tkeyidlist;
+                                continue;
+                            }
+
+                        }
                     }
                     var OBJ1 = form[v1.Name] == null ? form["id"] : form[v1.Name];
                     var newobj = v1.getPropertyInfoValue(OBJ1);
@@ -260,6 +272,18 @@ namespace Common.UI.JQGrid
                         {
                             continue;
                         }
+                        if (form["oper"] == "del") {
+
+                           var tkeyidlist= form[v1.Name] == null ? form["id"] : form[v1.Name];
+
+                            if (tkeyidlist.IndexOf(",") > -1) // 多个删除的ID;
+                            {
+                                ID = tkeyidlist;
+                                continue;
+                            }
+                          
+                        }
+                        //增加删除列;
                     }
 
                     var OBJ1 = form[v1.Name] == null ? form["id"] : form[v1.Name];
@@ -304,6 +328,10 @@ namespace Common.UI.JQGrid
             }
             return t;
         }
+
+
+
+
 
     }
 }
