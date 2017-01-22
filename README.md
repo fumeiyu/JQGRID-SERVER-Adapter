@@ -1,2 +1,14 @@
-﻿# JQGRID-SERVER-Adapter
-JQGRID 4.5.2版本，服务器端搜索，添加，编辑等自动适配代码
+# Summary
+
+* [����](README.md)
+* [GET](GET/README.md)
+  * [Ĭ�ϲ���](GET/section1.md)
+  * [���Ӳ���](GET/section2.md)
+  * [Fiter˵��](POST/section2.md)
+* [POST](POST/README.md)
+  * [Ĭ�ϲ���](POST/section1.md)
+  * [������������](POST/section2.md)
+* [����](end/README.md)
+
+
+
