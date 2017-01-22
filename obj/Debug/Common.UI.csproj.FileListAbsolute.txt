@@ -39,3 +39,4 @@ D:\newcompany\类库\Common.UI\Common.UI\Common.UI\bin\Debug\NPOI.OpenXml4Net.dl
 D:\newcompany\类库\Common.UI\Common.UI\Common.UI\bin\Debug\Newtonsoft.Json.xml
 D:\newcompany\类库\Common.UI\Common.UI\Common.UI\obj\Debug\Common.UI.dll
 D:\newcompany\类库\Common.UI\Common.UI\Common.UI\obj\Debug\Common.UI.pdb
+D:\newcompany\类库\Common.UI\Common.UI\Common.UI\obj\Debug\Common.UI.csprojResolveAssemblyReference.cache

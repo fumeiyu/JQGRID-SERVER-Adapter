@@ -46,7 +46,7 @@ namespace Common.UI.JQGrid
         }
 
         /// <summary>
-        /// 
+        ///  获取特定页面记录数
         /// </summary>
         /// <param name="rows"></param>
         /// <param name="pageindex"></param>
