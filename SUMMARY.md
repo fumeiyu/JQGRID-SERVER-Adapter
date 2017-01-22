@@ -1,4 +1,1 @@
-# Summary
-
-* [Introduction](README.MD)
-
+{% include "./book/SUMMARY.md" %}
