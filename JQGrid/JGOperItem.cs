@@ -1,97 +1,87 @@
-﻿using System;
+﻿using Castle.ActiveRecord;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
-
+using Common.UI.JQGrid;
 namespace Common.UI.JQGrid
 {
-   public class JGOperItem<T> where T : new()
+    /// <summary>
+    ///// v2.0版本加入了FiledList ，用来筛选属性值是否要赋值 afterrequestdataconvert[ 用于对jgoperitem操作], SaveT 保存后的对象
+    /// 修改主键自动匹配from["id"]，用来处理jggrid 修改delete必须要ID的问题
+    /// v.2.2版本加入了批量删除，传入 ID 列表
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public class JGOperItem<T> where T : new() 
     {
         public string oper = "";
         private T t;
         private HttpRequest request;
         public object ID;
+        public List<String> FiledLists;// 使用filed  过滤列表或者只选择转换列表
+        bool fiterType;
+        // public List<String> FiterFiledLists;//过滤的filed列表
+        public bool allowmutidelete=false; //批量删除 
+    
 
         public Action<T> beforeAdd, beforeDel, beforemodify;
+        public Action<T, JGOperItem<T>> afterrequestdataconvert;//数据转换玩后执行，用来重新设置ID
 
-       
-        public JGOperItem( HttpRequest request, Action<T> beforeAdd,Action<T> beforemodify,Action<T> beforeDel)
+        /// <summary>
+        /// 保存后save对象
+        /// </summary>
+        public T SaveT
         {
-            T t = new T();
-            this.t = t;
-            this.beforeAdd = beforeAdd;
-            this.request = request;
-            this.beforemodify = beforemodify;
-            this.beforeDel = beforeDel;
-
-
+            get
+            {
+                return t;
+            }
         }
+        public JGOperItem(HttpRequest request, Action<T> beforeAdd, Action<T> beforemodify, Action<T> beforeDel)
+     : this(request, beforeAdd, beforemodify, beforeDel, null,null) { }
         public JGOperItem(HttpRequest request):this(request,null,null,null)
         {
 
         }
+
+        public JGOperItem(HttpRequest request, Action<T> beforeAdd, Action<T> beforemodify, Action<T> beforeDel, Action<T, JGOperItem<T>> afterrequestdataconvert, List<String> filedList)
+            :this(request,beforeAdd,beforemodify,beforeDel,afterrequestdataconvert,filedList,false)
+        {
+
+   
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="beforeAdd"></param>
+        /// <param name="beforemodify"></param>
+        /// <param name="beforeDel"></param>
+        /// <param name="afterrequestdataconvert"></param>
+        /// <param name="filedList"></param>
+        /// <param name="fiterType">true 过滤列表 ，false，只选择列表</param>
+        public JGOperItem(HttpRequest request, Action<T> beforeAdd, Action<T> beforemodify, Action<T> beforeDel, Action<T, JGOperItem<T>> afterrequestdataconvert, List<String> filedList,bool fiterType)
+        {
+
+            this.beforeAdd = beforeAdd;
+            this.request = request;
+            this.beforemodify = beforemodify;
+            this.beforeDel = beforeDel;
+            this.afterrequestdataconvert = afterrequestdataconvert;
+            this.fiterType = fiterType;
+         
+                FiledLists = filedList;
+        
+
+        }
+
         void ConvertFromData()  {
 
-            var form = request.Form;
-            var v=t.GetType().GetProperties();
-
-            //反过来写
-            //foreach (var key in form.Keys)
-            //{
-            //    string k = key.ToString();
-            //    if ( key.ToString() == oper)
-            //        continue;
-            //    if (key.ToString() == "id")
-            //    {
-            //        if (form[k] == "_empty")
-            //            continue;
-            //        k = "ID";
-            //        ID = int.Parse(form[k]);
-            //    }
-            //    var OBJ1 = form[k];
-
-            //    var t1 = t.GetType().GetProperty(k);
-
-
-            //    if (t1 != null)
-            //    {
-            //        var newobj = t1.getPropertyInfoValue(OBJ1);
-            //        t1.SetValue(t, newobj);
-            //    }
-
-            //    //查找
-
-            //}
-
-            foreach (var v1 in v)
-            {
-                if (form[v1.Name] != null)
-                {
-
-                    //过滤默认的小写id；
-
-                    if (v1.Name.ToUpper() == nameof(ID)) {
-                        if (form["oper"] == "add") {
-                            continue;
-                        }
-                    }
-                    var OBJ1 = form[v1.Name];
-                    var newobj = v1.getPropertyInfoValue(OBJ1);
-                    if (newobj != null)
-                    {
-                        v1.SetValue(t, newobj);
-                    }
-                    if (v1.Name.ToUpper() == nameof(ID))
-                    {
-                        ID = newobj;
-                    }
-
-                }
-
-            }
-            oper = form["oper"];
+            T t = new T();
+            this.t = this.request.HttpRequestConvertToT<T>(FiledLists,fiterType, out ID);
+            oper = request.Form["oper"];
             //return t;
         }
 
@@ -110,7 +100,6 @@ namespace Common.UI.JQGrid
         //        else if (v1.PropertyType == typeof(bool))
         //        {
         //            return Boolean.Parse(obj.ToString());
-
 
         //        }
 
@@ -146,6 +135,9 @@ namespace Common.UI.JQGrid
             var v = t.GetType().GetProperties();
             foreach (var v1 in v)
             {
+                if (FiledFiter(v1.Name)) {
+                    continue;
+                }
                 if (request.Form[v1.Name] != null)
                 {
                     var obj = v1.getPropertyInfoValue(request.Form[v1.Name]);
@@ -153,9 +145,24 @@ namespace Common.UI.JQGrid
                 }
             }
         }
-   
+
+        private bool FiledFiter(string name) {
+            if (FiledLists == null)
+            {
+                return false;
+            }
+            else  if (fiterType){
+                return FiledLists.Find(a => a == name) == null ? false : true;
+            }
+            else 
+            return FiledLists.Find(a => a == name) == null ? true : false;
+        }
         public bool  DoDataAction() {
-            ConvertFromData();    
+
+            ConvertFromData();
+            if (afterrequestdataconvert != null) {
+                afterrequestdataconvert(t,this);
+            }
             switch (oper) {
                 case "add":
                     if (beforeAdd != null) {
@@ -189,20 +196,72 @@ namespace Common.UI.JQGrid
            var f = n.GetType().GetMethod("Update");
             //重新复制
             SetTValue(n);
+            if (beforemodify!=null) {
+                beforemodify(n);
+            }
             f.Invoke(n, new object[0]);
+            t = n;
             return true;
 
         }
         bool Delete() {
+            T n;
 
-            var n = Find();
-            if (beforeDel != null) {
-                beforeDel(n);
+            if (ID != null && ID.ToString().IndexOf(",") > -1) //批量删除
+            {
+                if (!this.allowmutidelete)
+                    throw new Exception("批量删除数据不允许");
+                    //批量删除的时候
+                    
+
+                String[] deletelist = ID.ToString().Split(',');
+                T n1 = new T();
+                var v = n1.GetType().GetProperties();
+                foreach (var str in deletelist)
+                {
+                    foreach (var y in v)
+                    {
+                        if (y.isPrimaryKeyAttribute())
+                        {
+                            //
+                            ID = y.getPropertyInfoValue(str);
+                            n = Find();
+                            if (beforeDel != null)
+                            {
+                                beforeDel(n);
+                            }
+                            var f = n.GetType().GetMethod("Delete");
+                            f.Invoke(n, new object[0]);
+                            //删除动作
+                            continue;
+                        }
+                    }
+                }
+                return true;
+
+
             }
-            var f = n.GetType().GetMethod("Delete");
-            f.Invoke(n, new object[0]);
+            else
+            {
+                if (ID == null || ID.ToString() == "0")
+                {
+                    n = new T();
+                    SetTValue(n);
+                }
+                else
+                {
 
-            return true;
+                    n = Find();
+                }
+                if (beforeDel != null)
+                {
+                    beforeDel(n);
+                }
+                var f = n.GetType().GetMethod("Delete");
+                f.Invoke(n, new object[0]);
+
+                return true;
+            }
         }
         T Find() {
             var t1 = t.GetType().BaseType.GetMethod("Find");
