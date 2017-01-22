@@ -2,6 +2,6 @@
     "gitbook": ">=2.0.0",
     "structure": {
         "readme": "README.md",
-	"summary":".book\\summary.md"
+	"summary":"book\\summary.md"
     }
 }
