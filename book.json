@@ -1,4 +1,4 @@
-﻿{
+{
     "gitbook": ">=2.0.0",
     "structure": {
         "readme": "README.md",
