@@ -45,6 +45,11 @@
                 }
                 y.SaveT.ID=2;
             };
+            
+              Action<t_User, JGOperItem<t_User>> setPassword = (a1, s1) =>
+            {
+                s1.ID = Userid;
+            }; //获取需要在操作前，重新修改数据ID,来修改特定的记录数
 
             JGOperItem<t_UserFav> op = new JGOperItem<t_UserFav>(Context.Request, a, null, del, before, null);
 
