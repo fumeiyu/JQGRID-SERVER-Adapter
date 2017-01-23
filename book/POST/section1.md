@@ -48,7 +48,6 @@ oper:edit
 
 ```
 ID:1
-
 oper:del
 ```
 
