@@ -1,10 +1,10 @@
 # Summary
 
 ## [安装](/book/安装.md)
+## 介绍(README.md)
+
 
 ## 引用
-
-* [����](README.md)
 * [GET](GET/README.md)
   * [Ĭ�ϲ���](GET/section1.md)
   * [���Ӳ���](GET/section2.md)
