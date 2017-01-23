@@ -13,7 +13,7 @@
     * [基础](book/POST/section1.md)
     * [进阶](book/POST/section2.md)
 
-*[基础](book/GET/section1.md)
+* [基础](book/GET/section1.md)
 
 
 
