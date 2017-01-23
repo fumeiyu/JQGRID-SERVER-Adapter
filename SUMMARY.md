@@ -4,7 +4,7 @@
 * [Introduction](README.md)
 
 
-## 介绍\(README.md\)
+## 介绍(README.md\)
 
 ## 引用
 * [GET](get.md)
