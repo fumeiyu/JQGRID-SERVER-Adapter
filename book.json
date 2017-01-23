@@ -1,6 +1,5 @@
-﻿{
+{
     "gitbook": ">=2.0.0",
-    "language": "zh",
     "structure": {
         "readme": "README.md",
 	"summary":"summary.md"
