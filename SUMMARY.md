@@ -3,6 +3,7 @@
 ## 安装
 * [Introduction](README.md)
 
+
 ## 介绍\(README.md\)
 
 ## 引用
@@ -12,11 +13,7 @@
 * [POST](post.md)
     * [基础](book/POST/section1.md)
     * [进阶](book/POST/section2.md)
-*[其他扩展方法](book/其他扩展方法.md)
+* [其他扩展方法](book/其他扩展方法.md)
 
-
-
-
-
-
+    
 
