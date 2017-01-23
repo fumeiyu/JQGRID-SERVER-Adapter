@@ -26,6 +26,19 @@
 
         }
 ```
+前端定义过滤字符串
+
+
+```
+rows:10 //数据行数
+page:1 //第几页
+sidx: //排序字段
+sord:asc //排序方式
+_FiterList：["name"],
+_IsFiter:true
+```
+
+
 
 
     
