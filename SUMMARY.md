@@ -1,6 +1,6 @@
 # Summary
 
-## 安装
+* [安装](安装.md)
 
 ## 引用
 
@@ -14,8 +14,6 @@
   * [Ĭ�ϲ���](POST/section1.md)
   * [������������](POST/section2.md)
 * [����](end/README.md)
-
-## 
 
 
 
