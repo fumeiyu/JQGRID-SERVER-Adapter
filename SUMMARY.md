@@ -5,7 +5,7 @@
 
 
 ## 引用
-* [GET](GET/README.md)
+* [GET]
   * [Ĭ�ϲ���](GET/section1.md)
   * [���Ӳ���](GET/section2.md)
   * [Fiter˵��](POST/section2.md)
