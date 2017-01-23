@@ -6,7 +6,7 @@
 
   private void TestType_Query()
         {
-            ICriterion ic = GetNoDeleteEq(); //第一delete不等于NONE
+            ICriterion ic = GetNoDeleteEq(); //第一delete不等于false
             JqGridSearch<TestType> search = new JqGridSearch<TestType>(Context.Request, ic);
             var result = search.Search(base.NeedCount);
             SuccessGridResult(result);
