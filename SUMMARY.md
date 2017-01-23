@@ -4,7 +4,7 @@
 ## 介绍(README.md)
 ## 引用
 * GET
-  * [基础](book/GET/section1.md)
+  * [基础](/book/GET/section1.md)
   * [进阶](GET/section2.md)
 * POST
   * [基础](POST/section1.md)
