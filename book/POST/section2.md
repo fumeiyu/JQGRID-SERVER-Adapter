@@ -32,3 +32,26 @@
 
 ##通过postAop过滤操作类型 信息请见【ACE模板】
 
+##在数据绑定后执行数据转换
+
+  
+
+```
+ Action<t_UserFav, JGOperItem<t_UserFav>> before = (x, y) =>
+            {
+                if (y.SaveT.MyFavID == frontUserID && x.FavType == 4)
+                {
+                    throw new Exception("不能关注自己");
+                }
+                y.SaveT.ID=2;
+            };
+
+            JGOperItem<t_UserFav> op = new JGOperItem<t_UserFav>(Context.Request, a, null, del, before, null);
+
+
+                op.DoDataAction();
+                result = 1;
+                //输出json代码
+
+```
+
