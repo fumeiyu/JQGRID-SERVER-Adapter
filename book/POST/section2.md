@@ -15,3 +15,18 @@
 ```
 
 ##添加修改删除前执行操作
+后台代码
+
+
+```
+          Action<Test> add = (a) =>
+            {
+                a.UserId = base.UserId;
+            };
+            Action<Test> update = (a) => { a.UserId = base.UserId; };
+            Action<Test> del = (a) => { a.UserId = base.UserId; };
+            JGOperItem<Test> jg = new JGOperItem<Test>(Context.Request, add, update, del);
+            jg.DoDataAction();
+            SuccessResut(jg.SaveT, "", "");
+```
+
