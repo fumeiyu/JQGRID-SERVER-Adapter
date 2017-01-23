@@ -4,7 +4,6 @@
 
 ## 引用
 
-* [安装](安装.md)
 * [����](README.md)
 * [GET](GET/README.md)
   * [Ĭ�ϲ���](GET/section1.md)
