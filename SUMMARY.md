@@ -13,7 +13,8 @@
     * [基础](book/POST/section1.md)
     * [进阶](book/POST/section2.md)
 
-*[](/[(book/其他扩展方法.md)] "其他扩展方法")
+[基础](book/GET/section1.md)
+)
 
 
 
